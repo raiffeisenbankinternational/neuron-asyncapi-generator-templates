@@ -1,0 +1,34 @@
+{
+  "name": "@neuron/asyncapi-python-models-generator",
+  "version": "0.1.0",
+  "description": "Generator that generates pulsar models from AsyncAPI definition",
+  "scripts": {
+    "test": "echo \"No test specified yet\"",
+    "lint": "echo \"No linter specified yet\"",
+    "generate:assets": "echo 'No additional assets need to be generated at the moment'"
+  },
+  "keywords": [
+    "asyncapi",
+    "generator",
+    "template"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Arnar Gauti Ingason <arnar.ingason@rbinternational.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://code.rbi.tech/raiffeisen/neuron-asyncapi-generator-templates.git"
+  },
+  "dependencies": {
+    "@asyncapi/generator-filters": "^2.1.0",
+    "js-yaml": "^3.13.1",
+    "lodash": "^4.17.15"
+  },
+  "generator": {
+    "generator": ">=0.50.0 <2.0.0",
+    "filters": [
+      "@asyncapi/generator-filters"
+    ]
+  }
+}

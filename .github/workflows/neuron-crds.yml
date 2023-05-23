@@ -1,0 +1,41 @@
+on:
+  workflow_call:
+    inputs:
+      kustomize:
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  render:
+    runs-on: self-hosted
+    container:
+      image: docker.code.rbi.tech/raiffeisen/neuron-asyncapi-generator-templates/generator:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v3
+
+    - name: generate CRDs from AsyncAPI template
+      shell: sh
+      run: |
+        ag asyncapi/asyncapi.yaml \
+            @neuron/asyncapi-crd-generator \
+            -o .dist/ \
+            --force-write \
+            -p "kustomize=${{inputs.kustomize}}"
+
+    - name: upload generated content
+      uses: actions/upload-artifact@v3
+      with:
+        name: neuron-crds-output
+        path: .dist/**
+        retention-days: 1
+
+    - name: cleanup
+      working-directory: /
+      shell: sh
+      run: |
+        find ${GITHUB_WORKSPACE}/. -name . -o -prune -exec rm -rf -- {} +

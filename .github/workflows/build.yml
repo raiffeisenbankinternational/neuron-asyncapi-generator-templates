@@ -1,0 +1,109 @@
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/workflows/*.yml'
+
+jobs:
+  # package:
+  #   runs-on: self-hosted
+  #   steps:
+  #   # "standard step" where repo needs to be checked-out first
+  #   - name: Checkout repo
+  #     uses: actions/checkout@v2
+  #
+  #   - uses: actions/setup-node@v3
+  #     with:
+  #       node-version: 16
+  #
+  #   - name: package build directories
+  #     shell: bash
+  #     run: |
+  #       rm -rf dist
+  #       npm config set registry https://artifacts.rbi.tech/artifactory/api/npm/npm-group
+  #       find . -maxdepth 1 -type d ! -name '.*' | while read folder; do
+  #         mkdir -p dist
+  #         pushd "$folder"
+  #         npm install
+  #         popd
+  #         tar -czvf dist/${folder}-${GITHUB_SHA:0:7}.tar.gz -C ${folder} .
+  #       done
+  #
+  #   - name: save artifacts
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: templates
+  #       retention-days: 1
+  #       path: |
+  #         dist/*.tar.gz
+  #
+  # upload:
+  #   runs-on: self-hosted
+  #   needs: package
+  #   steps:
+  #   - name: download packaged artifacts
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: templates
+  #
+  #   - name: upload to nexus
+  #     shell: bash
+  #     env:
+  #       NEXUS_USER: ${{ secrets.NEXUS_USER }}
+  #       NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+  #     run: |
+  #       cd dist
+  #       find . -name '*.tar.gz' | while read archive; do
+  #         curl -s --upload-file $archive \
+  #             -u ${NEXUS_USER}:${NEXUS_PASSWORD} \
+  #             https://nexus.rbinternational.corp/nexus/repository/1st-app-rel/neuron/asyncapi-generator-templates/${archive}
+  #       done
+  build:
+    runs-on: self-hosted
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v3
+
+    - name: login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: docker.code.rbi.tech
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: build docker image
+      shell: bash
+      run: |
+        docker build -t docker.code.rbi.tech/${{github.repository}}/generator:latest .
+
+    - name: push docker image
+      shell: bash
+      run: |
+        docker push docker.code.rbi.tech/${{github.repository}}/generator:latest
+
+  # patch:
+  #   runs-on: self-hosted
+  #   needs: build
+  #   steps:
+  #   # "standard step" where repo needs to be checked-out first
+  #   - name: checkout repo
+  #     uses: actions/checkout@v3
+  #     with:
+  #       token: ${{ secrets.CORTEX_BOT_TOKEN }}
+  #
+  #   - name: patch workflows
+  #     shell: bash
+  #     run: |
+  #       find .github/workflows -name '*.yml' ! -name 'build.yml' -type f | while read wf; do
+  #         echo "Patching workflow '$wf'"
+  #         sed -i -E "s|[A-Za-z0-9]{7}\.tar\.gz|${GITHUB_SHA:0:7}.tar.gz|g" "$wf"
+  #       done
+  #   - name: commit changes
+  #     run: |
+  #       git config --local user.name 'cortex-bot'
+  #       git config --local user.email 'cortex-bot@rbinternational.com'
+  #       git remote set-url origin https://cortex-bot:${{ secrets.CORTEX_BOT_TOKEN }}@code.rbi.tech/${{ github.repository }}
+  #       git add .github
+  #       git commit -m "Patching workflows"
+  #       git push

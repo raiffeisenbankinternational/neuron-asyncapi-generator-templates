@@ -1,0 +1,7 @@
+apiVersion: neuron.rbi.tech/v1alpha1
+kind: NeuronTopic
+metadata:
+  name: {{channelName}}
+spec:
+  tenant: {{channel.ext('x-tenant')}}
+  namespace: {{channel.ext('x-namespace')}}

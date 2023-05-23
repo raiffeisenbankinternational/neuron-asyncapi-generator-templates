@@ -1,0 +1,17 @@
+apiVersion: neuron.rbi.tech/v1alpha1
+kind: NeuronSchema
+metadata:
+  name: {{messageName}}
+spec:
+  tenant: {{message.ext('x-tenant')}}
+  namespace: {{message.ext('x-namespace')}}
+  type: {{message.ext('x-type') | upper}}
+  schema:
+    name: {{message.name()}}
+    type: record
+    fields:
+{%- for fieldName, field in message.payload().properties() %}
+    - name: {{fieldName}}
+      type: {{field.type() | mapType(field.format())}}
+      required: {{fieldName in message.payload().required()}}
+{%- endfor %}

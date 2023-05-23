@@ -1,0 +1,6 @@
+apiVersion: neuron.rbi.tech/v1alpha1
+kind: NeuronNamespace
+metadata:
+  name: {{namespaceName}}
+spec:
+  tenant: {{namespace.tenant}}

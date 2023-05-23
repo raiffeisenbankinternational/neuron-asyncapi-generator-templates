@@ -1,0 +1,6 @@
+apiVersion: neuron.rbi.tech/v1alpha1
+kind: NeuronTenant
+metadata:
+  name: {{tenantName}}
+spec:
+  allowedClusters: []
